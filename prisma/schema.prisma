@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output = "../node_modules/.prisma/client" // monorepo项目指定路径 非monorepo项目注释
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") // 通过环境变量注入
+  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL") // 影子数据库URL
+  relationMode = "prisma" // 显示声明关系模式
+}
+
+// Prisma model与数据库表的关联规范：
+//
+// 1. 命名规范：
+//    - 表名：通常使用蛇形命名法(snake_case)，如sys_user
+//    - 模型名：通常使用大驼峰命名法(PascalCase)，如SysUser
+//    - 可以使用@@map("表名")将模型名映射到实际表名
+//
+// 2. 字段映射：
+//    - 模型字段通常使用小驼峰命名法(camelCase)
+//    - 数据库列通常使用蛇形命名法(snake_case)
+//    - 可以使用@map("列名")将字段名映射到实际列名
+//
+// 3. 关系定义：
+//    - 使用@relation注解定义表之间的关系
+//    - 外键字段使用@relation(fields: [外键字段], references: [引用字段])
+//
+// 4. 索引和约束：
+//    - 使用@@index([字段])定义索引
+//    - 使用@@unique([字段组合])定义唯一约束
+//
+// 5. 示例改进后的模型(按照规范)：
+
+// model SysUser {
+//   userId    Int      @id @default(autoincrement()) @map("user_id")
+//   userName  String   @unique @map("user_name")
+//   age       Int
+//   userAlias String?  @map("user_alias")
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
+
+//   posts Post[] // 一对多关系示例
+
+//   @@map("sys_user")
+// }
+
+// 这是一个名为sys_user的数据模型定义，它将映射到数据库中的一个表
+model SysUser {
+  userId    Int      @id @default(autoincrement()) @map("user_id") // 主键
+  userName  String   @unique @map("user_name") // 用户名
+  userAge       Int?     @map("user_age") // 年龄
+  userAlias String?  @map("user_alias") // 用户别名
+  userEmail     String  @unique @map("user_email") // 邮箱
+  userPassword  String?  @map("user_password") // 密码
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_user")
+}
+
+// 角色表
+model SysRole {
+  roleId    Int      @id @default(autoincrement()) @map("role_id") // 主键
+  roleName  String   @unique @map("role_name") // 角色名
+  roleAlias String?  @map("role_alias") // 角色别名
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_role")
+}
+
+// 用户角色关联表
+model SysUserRole {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  userId Int    @map("user_id") // 用户ID
+  roleId Int    @map("role_id") // 角色ID
+
+  @@map("sys_user_role")
+}
+
+// 权限表
+model SysPermission {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  name   String @map("name") // 权限名
+  code   String @map("code") // 权限代码
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_permission")
+}
+
+// 角色权限关联表
+model SysRolePermission {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  roleId Int    @map("role_id") // 角色ID
+  permissionId Int    @map("permission_id") // 权限ID
+
+  @@map("sys_role_permission")
+}
+
+// 系统日志表
+model SysLog {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  userId Int    @map("user_id") // 用户ID
+  userName String @map("user_name") // 用户名
+  operation String @map("operation") // 操作
+  time String @map("time") // 时间
+  method String @map("method") // 方法
+  params String @map("params") // 参数
+  ip String @map("ip") // IP地址
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_log")
+}
+
+// 字典表
+model SysDict {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  name String @map("name") // 名称
+  code String @map("code") // 代码
+  value String @map("value") // 值
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_dict")
+}
+
+// 系统配置表
+model SysConfig {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  name String @map("name") // 名称
+  code String @map("code") // 代码
+  value String @map("value") // 值
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_config")
+}
+
+// 系统通知表
+model SysNotice {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  title String @map("title") // 标题
+  content String @map("content") // 内容
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_notice")
+}
+
+// 系统消息表
+model SysMessage {
+  id     Int    @id @default(autoincrement()) @map("id") // 主键
+  userId Int    @map("user_id") // 用户ID
+  content String @map("content") // 内容
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@map("sys_message")
+}
+
