@@ -343,3 +343,149 @@ pnpm i --save-dev @nestjs/cli rimraf
 >     },
 > }
 > ```
+
+
+
+## 六、打包发布
+
+> 这里我们采取的是docker镜像打包上传到服务器上运行的流程来实现服务的发布上线
+
+### 1、打包配置
+
+```dockerfile
+# Dockerfile
+
+# 阶段一：构建环境
+FROM node:23-alpine AS builder
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+# 创建工作目录
+WORKDIR /Anixuil/ani-server
+
+# 复制package.json和lockfile
+COPY package.json ./
+COPY package-lock.json* ./
+COPY .env ./
+
+# 复制prisma目录，这是必需的
+COPY prisma ./prisma/
+
+# 安装依赖，包括新添加的@anatine/zod-openapi
+RUN npm install --legacy-peer-deps
+
+# 生成Prisma客户端
+RUN npx prisma generate --schema=./prisma/schema.prisma
+
+# 复制所有源代码文件，除了node_modules
+COPY src ./src/
+COPY tsconfig.json ./
+COPY nest-cli.json ./
+
+# 构建应用
+RUN npm run build
+
+# 阶段二：生产镜像
+FROM node:23-alpine AS production
+WORKDIR /Anixuil/ani-server
+
+# 设置环境变量
+ENV NODE_ENV=production
+
+# 从构建阶段复制必要文件
+COPY --from=builder /Anixuil/ani-server/package.json ./
+COPY --from=builder /Anixuil/ani-server/dist ./dist
+COPY --from=builder /Anixuil/ani-server/prisma ./prisma
+COPY --from=builder /Anixuil/ani-server/node_modules ./node_modules
+COPY --from=builder /Anixuil/ani-server/.env ./
+
+# 添加健康检查
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD node -e "const http = require('http'); const options = { hostname: 'localhost', port: 3000, path: '/ani-server/health', timeout: 2000 }; const req = http.get(options, (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"
+
+# 明确暴露端口
+EXPOSE 3000
+
+# 启动应用
+CMD ["node", "dist/main.js"]
+```
+
+```yaml
+version: '3.8'
+
+services:
+  ani-server:
+    image: ani-server
+    build: .
+    env_file: .env
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}
+
+# 移除了mysql服务和volumes配置，因为现在直接使用外部MySQL服务
+```
+
+以上用到变量的地方都是在`.env`文件中声明的变量
+
+```
+PORT=3000
+
+DATABASE_URL="mysql://数据库用户:密码@ip地址:端口/数据库名?schema=public"
+
+MYSQL_HOST=你的服务器地址
+MYSQL_PORT=数据库服务端口
+MYSQL_USER=数据库用户
+MYSQL_PASSWORD=数据库密码
+MYSQL_DATABASE=数据库
+MYSQL_ROOT_PASSWORD=数据库密码
+
+```
+
+然后执行
+
+```bash
+docker-compose build # 命令进行打包
+```
+
+打包结束后我们可以在`Docker Desktop`的`images`中看到刚刚打好包的镜像，此时我们再执行命令
+
+```bash
+docker-compose up -d # 构建运行容器
+```
+
+这时我们就能在`Docker Desktop`的`containers`中看到运行起来的容器了
+
+本地调试过后没有问题，这时候我们就要转战线上了。
+
+我们首先在本地打一个tar包
+
+```bash
+docker images # 查看镜像
+docker save ani-server -o ani-server.tar # 打包
+```
+
+连上服务器，我这里只说我的流程。
+
+在根目录创建`docker-images`目录，随便取名，把刚刚打好的tar包上传到服务器上
+
+```bash
+# 在根目录创建docker-images
+cd docker-images
+docker load -i ani-server.tar # 加载上传的tar包到服务器镜像库
+```
+
+然后我是宝塔面板，直接上宝塔面板的docker管理，创建容器选择镜像找到刚才的镜像，然后配置后端口什么的。
+
+运行起来后在自己本地`postman`测试ip端口直接访问接口。
+
+## 七、反向代理
+
+新添加一个网站，然后配置好证书、域名，然后配置该域名的反向代理。目标URL是docker镜像运行起来后的地址
+
+![img](https://anixuil.obs.cn-south-1.myhuaweicloud.com/typoraImageResource/QQ_1744106066228.png)
+
+![image-20250408175524143](https://anixuil.obs.cn-south-1.myhuaweicloud.com/typoraImageResource/image-20250408175524143.png)
+
+## 八、结语

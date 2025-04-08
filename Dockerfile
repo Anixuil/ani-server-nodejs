@@ -1,5 +1,5 @@
 # 阶段一：构建环境
-FROM node:18-alpine AS builder
+FROM node:23-alpine AS builder
 # 设置时区
 ENV TZ=Asia/Shanghai
 
@@ -9,6 +9,7 @@ WORKDIR /Anixuil/ani-server
 # 复制package.json和lockfile
 COPY package.json ./
 COPY package-lock.json* ./
+COPY .env ./
 
 # 复制prisma目录，这是必需的
 COPY prisma ./prisma/
@@ -28,7 +29,7 @@ COPY nest-cli.json ./
 RUN npm run build
 
 # 阶段二：生产镜像
-FROM node:18-alpine AS production
+FROM node:23-alpine AS production
 WORKDIR /Anixuil/ani-server
 
 # 设置环境变量
@@ -39,6 +40,14 @@ COPY --from=builder /Anixuil/ani-server/package.json ./
 COPY --from=builder /Anixuil/ani-server/dist ./dist
 COPY --from=builder /Anixuil/ani-server/prisma ./prisma
 COPY --from=builder /Anixuil/ani-server/node_modules ./node_modules
+COPY --from=builder /Anixuil/ani-server/.env ./
 
+# 添加健康检查
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD node -e "const http = require('http'); const options = { hostname: 'localhost', port: 3000, path: '/ani-server/health', timeout: 2000 }; const req = http.get(options, (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"
+
+# 明确暴露端口
 EXPOSE 3000
+
+# 启动应用
 CMD ["node", "dist/main.js"]

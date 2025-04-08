@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-03-27 10:40:06
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-02 17:45:54
+ * @LastEditTime: 2025-04-08 10:20:39
  * @Description: 主文件
  */
 import { NestFactory } from '@nestjs/core';
@@ -27,6 +27,6 @@ async function bootstrap() {
   // 注册全局Zod验证管道
   app.useGlobalPipes(new ZodCustomValidationPipe());
   
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();
