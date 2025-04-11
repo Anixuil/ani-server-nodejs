@@ -488,4 +488,18 @@ docker load -i ani-server.tar # 加载上传的tar包到服务器镜像库
 
 ![image-20250408175524143](https://anixuil.obs.cn-south-1.myhuaweicloud.com/typoraImageResource/image-20250408175524143.png)
 
-## 八、结语
+## 八、JWT
+
+安装核心依赖
+
+```bash
+pnpm i @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt @nestjs/config @types/bcrypt
+```
+
+在`.env`中新加**JWT**配置
+
+```
+JWT_SECRET="your_secret"
+JWT_EXPIRES_IN="24h"
+```
+

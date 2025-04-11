@@ -13,13 +13,12 @@ export class ZodCustomValidationPipe extends ZodValidationPipe implements PipeTr
         try {
             return await super.transform(value, metadata);
         } catch (error) {            
-            if (error instanceof ZodError) {
+            if (error instanceof ZodError) {                
                 // 提取Zod自定义错误消息
                 const formattedErrors = error.errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message
                 }));
-                console.log('error', error);
 
                 throw new BadRequestException({
                     message: '参数验证失败',

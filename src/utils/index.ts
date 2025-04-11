@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-04-02 16:08:50
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-02 16:26:44
+ * @LastEditTime: 2025-04-11 09:57:07
  * @Description: 请填写简介
  */
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
@@ -43,4 +43,18 @@ export function handleApiServiceError(err: any) {
     
     // 处理非Prisma错误
     return new InternalServerErrorException('未知服务器错误')
+}
+
+// 深拷贝
+export function deepClone<T>(obj: T): T {
+    if (typeof obj !== 'object' || obj === null) return obj
+    if (obj instanceof Date) return new Date(obj) as unknown as T
+    if (obj instanceof RegExp) return new RegExp(obj) as unknown as T
+    const result = Array.isArray(obj) ? [] : {}
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            (result as Record<string, any>)[key] = deepClone(obj[key])
+        }
+    }
+    return result as T
 }
