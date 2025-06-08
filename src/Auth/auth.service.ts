@@ -2,13 +2,13 @@
  * @Author: Anixuil
  * @Date: 2025-04-10 10:24:25
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-11 10:26:01
+ * @LastEditTime: 2025-06-08 15:53:59
  * @Description: 请填写简介
  */
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "src/prisma/prisma.service";
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcryptjs'
 import { SysUser } from "@prisma/client";
 import { InjectRedis } from "@nestjs-modules/ioredis";
 import { Redis } from "ioredis";

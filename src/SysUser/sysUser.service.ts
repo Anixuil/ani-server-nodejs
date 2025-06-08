@@ -2,14 +2,14 @@
  * @Author: Anixuil
  * @Date: 2025-04-02 11:15:46
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-11 10:01:13
+ * @LastEditTime: 2025-06-08 15:53:56
  * @Description: 请填写简介
  */
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { AddSysUserDto } from "./dto/addSysUser.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { handleApiServiceError } from "src/utils";
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcryptjs'
 import { LoginSysUserDto } from "./dto/loginSysUser.dto";
 import { AuthService } from "src/Auth/auth.service";
 
