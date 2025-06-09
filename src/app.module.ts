@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-03-27 10:40:06
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-11 10:13:01
+ * @LastEditTime: 2025-04-14 11:46:47
  * @Description: 主模块
  */
 import { Module } from '@nestjs/common';
@@ -16,6 +16,7 @@ import { AuthModule } from './Auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { jwtConfig } from './Auth/jwt.config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     }),
     SysUserModule,
     RedisModule,
-    AuthModule
+    AuthModule,
+    AiModule
   ],
   controllers: [AppController],
   providers: [
