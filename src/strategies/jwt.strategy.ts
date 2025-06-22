@@ -37,13 +37,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         delete payload.iat;
         // 查看payload是否在redis中
         const storedToken = await this.redisService.get(`user:${payload.userId}`);
-        if(typeof payload !== 'string'){
-            payload = JSON.stringify(payload)
-        }
-        if (payload != storedToken) {
+        const payloadString = typeof payload !== 'string' ? JSON.stringify(payload) : payload;
+        if (payloadString != storedToken) {
             throw new UnauthorizedException("Token已失效");
         }
 
-        return { userId: payload.sub, email: payload.email };
+        // 返回用户信息
+        return {
+            userId: payload.userId,
+            userName: payload.userName,
+            userEmail: payload.userEmail,
+            userAge: payload.userAge,
+            userAlias: payload.userAlias
+        };
     }
 }

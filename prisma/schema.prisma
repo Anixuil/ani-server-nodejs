@@ -61,6 +61,8 @@ model SysUser {
   userPassword  String?  @map("user_password") // 密码
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_user")
 }
@@ -72,6 +74,8 @@ model SysRole {
   roleAlias String?  @map("role_alias") // 角色别名
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_role")
 }
@@ -92,6 +96,8 @@ model SysPermission {
   code   String @map("code") // 权限代码
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_permission")
 }
@@ -101,6 +107,10 @@ model SysRolePermission {
   id     Int    @id @default(autoincrement()) @map("id") // 主键
   roleId Int    @map("role_id") // 角色ID
   permissionId Int    @map("permission_id") // 权限ID
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_role_permission")
 }
@@ -109,14 +119,15 @@ model SysRolePermission {
 model SysLog {
   id     Int    @id @default(autoincrement()) @map("id") // 主键
   userId Int    @map("user_id") // 用户ID
-  userName String @map("user_name") // 用户名
   operation String @map("operation") // 操作
-  time String @map("time") // 时间
+  time DateTime @default(now()) @map("time") // 时间
   method String @map("method") // 方法
-  params String @map("params") // 参数
+  params String @map("params") @db.Text // 参数，使用Text类型以存储更多内容
   ip String @map("ip") // IP地址
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_log")
 }
@@ -129,6 +140,8 @@ model SysDict {
   value String @map("value") // 值
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_dict")
 }
@@ -141,6 +154,8 @@ model SysConfig {
   value String @map("value") // 值
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_config")
 }
@@ -152,6 +167,8 @@ model SysNotice {
   content String @map("content") // 内容
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_notice")
 }
@@ -163,7 +180,29 @@ model SysMessage {
   content String @map("content") // 内容
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
 
   @@map("sys_message")
 }
 
+// 系统菜单表
+model SysMenu {
+  id Int @id @default(autoincrement()) @map("id") // 主键
+  name String @map("name") // 名称
+  path String @map("path") // 路径
+  meta String @map("meta") // 元数据
+  parentId Int @map("parent_id") // 父级ID
+  icon String @map("icon") // 图标
+  sort Int @default(0) @map("sort") // 排序
+  isHidden Boolean @map("is_hidden") // 是否隐藏
+  isKeepAlive Boolean @map("is_keep_alive") // 是否缓存
+  isAffix Boolean @map("is_affix") // 是否固定
+  isExternal Boolean @map("is_external") // 是否外部链接
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+  createBy Int @map("create_by") // 创建人
+  updateBy Int @map("update_by") // 更新人
+
+  @@map("sys_menu")
+}

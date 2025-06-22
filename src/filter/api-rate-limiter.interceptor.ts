@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-04-10 15:02:11
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-11 10:55:32
+ * @LastEditTime: 2025-06-21 21:35:32
  * @Description: 请填写简介
  */
 import { InjectRedis } from "@nestjs-modules/ioredis";
@@ -20,7 +20,6 @@ export class ApiRateLimiterInterceptor implements NestInterceptor {
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         try {
             const key = 'rate-limit:' + context.switchToHttp().getRequest().ip;
-            console.log('key', key);
             
             // 检查 Redis 连接状态
             if (this.redisService.status !== 'ready') {
@@ -38,6 +37,8 @@ export class ApiRateLimiterInterceptor implements NestInterceptor {
             if (currentRequestCount > 10) {
                 throw new HttpException('请求次数过多', HttpStatus.TOO_MANY_REQUESTS);
             }
+
+            console.log('key', key, currentRequestCount);
 
             return next.handle().pipe(
                 tap(() => {

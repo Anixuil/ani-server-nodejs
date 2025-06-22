@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-03-27 10:40:06
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-08 10:20:39
+ * @LastEditTime: 2025-06-22 14:42:03
  * @Description: 主文件
  */
 import { NestFactory } from '@nestjs/core';

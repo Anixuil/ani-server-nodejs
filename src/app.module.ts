@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-03-27 10:40:06
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-04-14 11:46:47
+ * @LastEditTime: 2025-06-22 12:51:38
  * @Description: 主模块
  */
 import { Module } from '@nestjs/common';
