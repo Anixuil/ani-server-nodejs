@@ -14,6 +14,9 @@ COPY .env ./
 # 复制prisma目录，这是必需的
 COPY prisma ./prisma/
 
+# npm 镜像源
+RUN npm config set registry https://registry.npmmirror.com
+
 # 安装依赖，包括新添加的@anatine/zod-openapi
 RUN npm install --legacy-peer-deps
 
