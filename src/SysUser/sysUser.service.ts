@@ -2,8 +2,8 @@
  * @Author: Anixuil
  * @Date: 2025-04-02 11:15:46
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-06-22 13:24:05
- * @Description: 请填写简介
+ * @LastEditTime: 2025-10-02 11:12:52
+ * @Description: 用户服务
  */
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { AddSysUserDto } from "./dto/addSysUser.dto";
@@ -13,11 +13,14 @@ import * as bcrypt from 'bcryptjs'
 import { LoginSysUserDto } from "./dto/loginSysUser.dto";
 import { AuthService } from "src/Auth/auth.service";
 import { SysLogService } from "src/SysLog/sysLog.service";
+import { WxLoginSysUserDto } from "./dto/wxLoginSysUser.dto";
+import { HttpService } from "@nestjs/axios";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class SysUserService {
-    constructor(private readonly prisma: PrismaService, private readonly authService: AuthService, private readonly sysLogService: SysLogService) { }
-    
+    constructor(private readonly prisma: PrismaService, private readonly authService: AuthService, private readonly sysLogService: SysLogService, private readonly httpService: HttpService, private readonly configService: ConfigService) { }
+
     // 检查邮箱是否重复
     private async checkEmailExists(email: string): Promise<void> {
         const existingUser = await this.prisma.sysUser.findUnique({
@@ -31,7 +34,7 @@ export class SysUserService {
         const existingUser = await this.prisma.sysUser.findUnique({
             where: { userEmail: email }
         });
-        
+
         return existingUser ? true : false;
     }
 
@@ -42,7 +45,7 @@ export class SysUserService {
         });
         if (existingUser) throw new BadRequestException('用户名已存在');
     }
-    
+
 
     // 添加用户
     async addSysUser(data: AddSysUserDto, reqData?: any): Promise<any> {
@@ -51,7 +54,7 @@ export class SysUserService {
             // 检查邮箱和用户名是否已存在
             await this.checkEmailExists(data.userEmail);
             await this.checkUsernameExists(data.userName);
-            
+
             // 对密码进行加密
             const hashedPassword = await bcrypt.hash(data.userPassword, 10)
 
@@ -60,13 +63,13 @@ export class SysUserService {
             const updateBy = 0;
 
             // 创建用户，并设置创建人和更新人
-            const user = await this.prisma.sysUser.create({ 
-                data: { 
-                    ...data, 
-                    userPassword: hashedPassword, 
-                    createBy, 
-                    updateBy 
-                } 
+            const user = await this.prisma.sysUser.create({
+                data: {
+                    ...data,
+                    userPassword: hashedPassword,
+                    createBy,
+                    updateBy
+                }
             })
             userId = user.userId
             // 添加系统日志
@@ -88,7 +91,7 @@ export class SysUserService {
                 params: JSON.stringify(data),
                 ip: reqData.ip
             }, userId);
-            
+
             // 保留BadRequestException原始错误信息
             if (err instanceof BadRequestException || err instanceof UnauthorizedException || err instanceof NotFoundException) {
                 throw err;
@@ -109,14 +112,14 @@ export class SysUserService {
             if (!user) throw new NotFoundException('用户不存在')
             userId = user.userId
             // 检查密码是否正确
-            if(!user.userPassword) throw new NotFoundException('用户密码异常')
+            if (!user.userPassword) throw new NotFoundException('用户密码异常')
             const isPasswordValid = await bcrypt.compare(data.userPassword, user.userPassword)
             if (!isPasswordValid) throw new UnauthorizedException('密码错误')
-            
+
             // 生成token
             const token = await this.authService.login(user)
             if (!token || !token.access_token) throw new UnauthorizedException('登录失败')
-            
+
             // 创建不包含密码的用户对象
             const userInfo = {
                 userId: user.userId,
@@ -142,7 +145,7 @@ export class SysUserService {
                 ...token,
                 userInfo
             }
-            
+
         } catch (err) {
             console.log('err', err);
             // 添加系统日志
@@ -161,6 +164,88 @@ export class SysUserService {
                 throw err;
             }
             // 其他错误使用通用处理函数
+            throw handleApiServiceError(err);
+        }
+    }
+
+    // 微信登录
+    async wxLogin(data: WxLoginSysUserDto, reqData?: any): Promise<any> {
+        let userId = 0 // 用户ID
+        try {
+            const appid = this.configService.get('WX_APPID')
+            const secret = this.configService.get('WX_SECRET')
+            // 先通过code获取微信用户信息
+            const wxUserInfo = await this.httpService.axiosRef({
+                method: 'GET',
+                url: 'https://api.weixin.qq.com/sns/jscode2session',
+                params: {
+                    appid,
+                    secret,
+                    js_code: data.code,
+                    grant_type: 'authorization_code'
+                }
+            })
+
+            const { openid, session_key, unionid } = wxUserInfo.data
+
+            if(!openid) throw new UnauthorizedException('微信登录失败')
+
+            // 根据openid查询用户
+            let user = await this.prisma.sysUser.findUnique({
+                where: { wxOpenId: openid }
+            })
+            if (!user) {                
+                // 创建用户
+                const newUser = await this.prisma.sysUser.create({
+                    data: {
+                        wxOpenId: openid,
+                        wxUnionId: unionid || '',
+                        wxAvatarUrl: data.avatarUrl || '',
+                        userName: data.nickName || '',
+                        userAlias: data.nickName || '',
+                        userEmail: `${data.nickName}@wx.com`,
+                        createBy: 0,
+                        updateBy: 0
+                    }
+                })
+                user = newUser
+            }
+            // 生成token
+            const token = await this.authService.login(user)
+            if (!token || !token.access_token) throw new UnauthorizedException('登录失败')
+
+            // 创建不包含密码的用户对象
+            const userInfo = {
+                userId: user.userId,
+                userName: user.userName,
+                userEmail: user.userEmail,
+                userAge: user.userAge,
+                userAlias: user.userAlias,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }
+            
+            // 添加系统日志
+            await this.sysLogService.addSysLog({
+                userId: user.userId,
+                operation: reqData.url,
+                method: reqData.method,
+                params: JSON.stringify(userInfo),
+                ip: reqData.ip
+            }, user.userId)
+            return {
+                ...token,
+                userInfo
+            }
+        } catch (err) {
+            // 添加系统日志
+            await this.sysLogService.addSysLog({
+                userId: userId,
+                operation: reqData.url,
+                method: reqData.method,
+                params: JSON.stringify(data),
+                ip: reqData.ip
+            }, userId)
             throw handleApiServiceError(err);
         }
     }

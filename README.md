@@ -1,6 +1,14 @@
 # Ani-Server
 
 > 这是Ani-Server搭建文档
+>
+> 环境配置
+>
+> NodeJS v23.0.0
+>
+> pnpm v9.5.0
+>
+> npm v10.9.0
 
 ## 一、项目初始化
 

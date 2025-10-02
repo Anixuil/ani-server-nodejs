@@ -59,6 +59,9 @@ model SysUser {
   userAlias String?  @map("user_alias") // 用户别名
   userEmail     String  @unique @map("user_email") // 邮箱
   userPassword  String?  @map("user_password") // 密码
+  wxOpenId String? @unique @map("wx_open_id") // 微信openId
+  wxUnionId String? @map("wx_union_id") // 微信unionId
+  wxAvatarUrl String? @map("wx_avatar_url") // 微信头像
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
   createBy Int @map("create_by") // 创建人
@@ -206,3 +209,5 @@ model SysMenu {
 
   @@map("sys_menu")
 }
+
+// 

@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-06-07 20:05:54
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-06-21 20:52:25
+ * @LastEditTime: 2025-09-30 12:29:56
  * @Description: redis 配置
  */
 import { Module } from "@nestjs/common";
@@ -14,7 +14,7 @@ import { RedisModule as RedisModuleNest } from "@nestjs-modules/ioredis";
             type: 'single',
             url: '121.37.4.76',
             options: {
-                username: 'default',
+                username: '',
                 password: 'Lx20010207',
                 // username: '',
                 // password: '',
