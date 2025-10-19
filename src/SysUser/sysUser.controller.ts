@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-04-02 11:31:16
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-10-02 10:03:37
+ * @LastEditTime: 2025-10-03 10:36:04
  * @Description: 系统用户控制器
  */
 import { Body, Controller, Post, UsePipes, UseInterceptors, Request, Get, Query } from "@nestjs/common";
@@ -65,5 +65,19 @@ export class SysUserController {
     const result = await this.SysUserService.publicCheckEmailExists(userEmail);
     const msg = result ? '邮箱已存在' : '邮箱不存在';
     return RestResponse.success(result, msg);
+  }
+
+  @Post('logout')
+  async logout(@Request() req: any): Promise<any> {
+    const reqData = req;
+    const result = await this.SysUserService.logout(reqData);
+    return RestResponse.success(result, result ? '注销成功' : '注销失败');
+  }
+
+  @Get('getUserInfo')
+  async getUserInfo(@Request() req: any): Promise<any>{
+    const reqData = req
+    const result = await this.SysUserService.getUserInfo(reqData);
+    return RestResponse.success(result, '获取用户信息成功');
   }
 }

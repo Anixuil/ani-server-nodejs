@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-04-08 09:07:26
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-06-22 00:13:14
+ * @LastEditTime: 2025-10-03 10:26:26
  * @Description: 请填写简介
  */
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
@@ -28,8 +28,8 @@ export class AppController {
 
   @Get('testAuth')
   @UseGuards(JwtAuthGuard)
-  testAuth(): { message: string }{
-    return { message: '认证成功' }
+  testAuth(): { data: boolean, message: string }{
+    return { data: true, message: '认证成功' }
   }
 
   @Public()

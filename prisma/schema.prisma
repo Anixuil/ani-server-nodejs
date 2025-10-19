@@ -125,6 +125,7 @@ model SysLog {
   operation String @map("operation") // 操作
   time DateTime @default(now()) @map("time") // 时间
   method String @map("method") // 方法
+  result Int @map("result") @default(1) // 结果 1成功 0失败
   params String @map("params") @db.Text // 参数，使用Text类型以存储更多内容
   ip String @map("ip") // IP地址
   createdAt DateTime @default(now()) @map("created_at") // 创建时间

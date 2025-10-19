@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-04-02 11:15:46
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-10-02 11:12:52
+ * @LastEditTime: 2025-10-03 10:46:46
  * @Description: 用户服务
  */
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
@@ -16,10 +16,12 @@ import { SysLogService } from "src/SysLog/sysLog.service";
 import { WxLoginSysUserDto } from "./dto/wxLoginSysUser.dto";
 import { HttpService } from "@nestjs/axios";
 import { ConfigService } from "@nestjs/config";
+import { Redis } from "ioredis";
+import { InjectRedis } from "@nestjs-modules/ioredis";
 
 @Injectable()
 export class SysUserService {
-    constructor(private readonly prisma: PrismaService, private readonly authService: AuthService, private readonly sysLogService: SysLogService, private readonly httpService: HttpService, private readonly configService: ConfigService) { }
+    constructor(private readonly prisma: PrismaService, private readonly authService: AuthService, private readonly sysLogService: SysLogService, private readonly httpService: HttpService, private readonly configService: ConfigService, @InjectRedis() private readonly redisService: Redis) { }
 
     // 检查邮箱是否重复
     private async checkEmailExists(email: string): Promise<void> {
@@ -89,7 +91,8 @@ export class SysUserService {
                 operation: reqData.url,
                 method: reqData.method,
                 params: JSON.stringify(data),
-                ip: reqData.ip
+                ip: reqData.ip,
+                result: 0
             }, userId);
 
             // 保留BadRequestException原始错误信息
@@ -127,6 +130,9 @@ export class SysUserService {
                 userEmail: user.userEmail,
                 userAge: user.userAge,
                 userAlias: user.userAlias,
+                wxOpenId: user.wxOpenId,
+                wxUnionId: user.wxUnionId,
+                wxAvatarUrl: user.wxAvatarUrl,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
@@ -157,7 +163,8 @@ export class SysUserService {
                     ...data,
                     userPassword: '******'
                 }),
-                ip: reqData.ip
+                ip: reqData.ip,
+                result: 0
             }, userId);
             // 保留BadRequestException原始错误信息
             if (err instanceof BadRequestException || err instanceof UnauthorizedException || err instanceof NotFoundException) {
@@ -221,6 +228,9 @@ export class SysUserService {
                 userEmail: user.userEmail,
                 userAge: user.userAge,
                 userAlias: user.userAlias,
+                wxOpenId: user.wxOpenId,
+                wxUnionId: user.wxUnionId,
+                wxAvatarUrl: user.wxAvatarUrl,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             }
@@ -244,9 +254,78 @@ export class SysUserService {
                 operation: reqData.url,
                 method: reqData.method,
                 params: JSON.stringify(data),
-                ip: reqData.ip
+                ip: reqData.ip,
+                result: 0
             }, userId)
             throw handleApiServiceError(err);
         }
+    }
+
+    // 注销登录
+    async logout(reqData?: any): Promise<boolean> {
+        const userId = reqData.user.userId || 0 // 用户ID
+        try {
+            await this.redisService.del(`user:${userId}`)
+            // 添加系统日志
+            await this.sysLogService.addSysLog({
+                userId: userId,
+                operation: reqData.url,
+                method: reqData.method,
+                params: JSON.stringify(reqData.user),
+                ip: reqData.ip
+            }, userId)
+            return true
+        } catch (err) {
+            await this.sysLogService.addSysLog({
+                userId: userId,
+                operation: reqData.url,
+                method: reqData.method,
+                params: JSON.stringify(reqData.user),
+                ip: reqData.ip
+            }, userId)
+            return false
+        }
+    }
+
+    // 获取用户信息
+    async getUserInfo(reqData?: any): Promise<any> {
+        const userId = reqData.user.userId || 0 // 用户ID
+        try {
+            const user = await this.prisma.sysUser.findUnique({
+                where: { userId },
+                select: {
+                    userId: true,
+                    userName: true,
+                    userEmail: true,
+                    userAge: true,
+                    userAlias: true,
+                    wxOpenId: true,
+                    wxUnionId: true,
+                    wxAvatarUrl: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    createBy: true,
+                    updateBy: true
+                }
+            })
+            await this.sysLogService.addSysLog({
+                userId: userId,
+                operation: reqData.url,
+                method: reqData.method,
+                params: JSON.stringify(user),
+                ip: reqData.ip
+            }, userId)
+            return user
+        } catch (err) {
+            await this.sysLogService.addSysLog({
+                userId: userId,
+                operation: reqData.url,
+                method: reqData.method,
+                params: JSON.stringify(reqData.user),
+                ip: reqData.ip,
+                result: 0
+            }, userId)
+        }
+        
     }
 }

@@ -10,10 +10,10 @@ export class SysLogService {
     // 添加系统日志
     async addSysLog(data: AddSysLogDto, currentUserId: number) { 
         try {
-            const { userId, operation, time, method, params, ip } = data;
+            const { userId, operation, time, method, params, ip, result } = data;
             const log = await this.prisma.sysLog.create({
                 data: {
-                    userId, operation, time, method, params, ip, createBy: currentUserId, updateBy: currentUserId }
+                    userId, operation, time, method, params, ip, result, createBy: currentUserId, updateBy: currentUserId }
             })
             return log;
         } catch (err) {

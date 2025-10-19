@@ -2,7 +2,7 @@
  * @Author: Anixuil
  * @Date: 2025-06-07 20:05:54
  * @LastEditors: Anixuil
- * @LastEditTime: 2025-09-30 12:29:56
+ * @LastEditTime: 2025-10-02 18:15:09
  * @Description: redis 配置
  */
 import { Module } from "@nestjs/common";
