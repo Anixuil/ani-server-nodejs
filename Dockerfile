@@ -27,6 +27,10 @@ RUN npx prisma generate --schema=./prisma/schema.prisma
 COPY src ./src/
 COPY tsconfig.json ./
 COPY nest-cli.json ./
+COPY global.d.ts ./
+
+# 复制types目录
+COPY types ./types/
 
 # 构建应用
 RUN npm run build
@@ -44,6 +48,8 @@ COPY --from=builder /Anixuil/ani-server/dist ./dist
 COPY --from=builder /Anixuil/ani-server/prisma ./prisma
 COPY --from=builder /Anixuil/ani-server/node_modules ./node_modules
 COPY --from=builder /Anixuil/ani-server/.env ./
+COPY --from=builder /Anixuil/ani-server/global.d.ts ./
+COPY --from=builder /Anixuil/ani-server/types ./types
 
 # 添加健康检查
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
